@@ -171,20 +171,6 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   </Target>
 
-  <Target Name="_CheckForLanguageAndFeatureCombinationSupport"
-          BeforeTargets="_CheckForInvalidConfigurationAndPlatform;ProcessFrameworkReferences">
-
-    <NETSdkError Condition="'$(Language)' == 'C++' and $(OutputType) != 'library' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'"
-                 ResourceName="NoSupportCppNonDynamicLibraryDotnetCore" />
-
-    <NETSdkError Condition="'$(Language)' == 'C++' and $(EnableComHosting) == 'true'"
-                 ResourceName="NoSupportCppEnableComHosting" />
-
-    <NETSdkError Condition="'$(Language)' == 'C++' and $(SelfContained) == 'true'"
-                 ResourceName="NoSupportCppSelfContained" />
-
-  </Target>
-
   <Target Name="_CheckForNETCoreSdkIsPreview"
           BeforeTargets="_CheckForInvalidConfigurationAndPlatform"
           Condition=" '$(_NETCoreSdkIsPreview)' == 'true' AND '$(SuppressNETCoreSdkPreviewMessage)' != 'true' ">
