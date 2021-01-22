@@ -73,9 +73,12 @@ namespace Microsoft.DotNet.Watcher.Tools
                         context.Reporter.Verbose($"Refresh server running at {serverUrl}.");
                         context.ProcessSpec.EnvironmentVariables["ASPNETCORE_AUTO_RELOAD_WS_ENDPOINT"] = serverUrl;
 
+                        const string dotnetStartHooksName = "DOTNET_STARTUP_HOOKS";
                         var pathToMiddleware = Path.Combine(AppContext.BaseDirectory, "middleware", "Microsoft.AspNetCore.Watch.BrowserRefresh.dll");
-                        context.ProcessSpec.EnvironmentVariables["DOTNET_STARTUP_HOOKS"] = pathToMiddleware;
-                        context.ProcessSpec.EnvironmentVariables["ASPNETCORE_HOSTINGSTARTUPASSEMBLIES"] = "Microsoft.AspNetCore.Watch.BrowserRefresh";
+                        context.ProcessSpec.EnvironmentVariables[dotnetStartHooksName] = AddOrAppend(dotnetStartHooksName, pathToMiddleware, RuntimeInformation.IsOsPlatform(OSPlatform.Windows) ? ';' : ':');
+
+                        const string hostingStartupAssembliesName = "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES";
+                        context.ProcessSpec.EnvironmentVariables[hostingStartupAssembliesName] = AddOrAppend(hostingStartupAssembliesName, "Microsoft.AspNetCore.Watch.BrowserRefresh", ';');
                     }
                 }
             }
@@ -94,6 +97,20 @@ namespace Microsoft.DotNet.Watcher.Tools
             }
 
             return _refreshServer.SendMessage(message, cancellationToken);
+        }
+
+        private string AddOrAppend(string envVarName, string envVarValue. char separator)
+        {
+            var existing = Environment.GetEnvironmentVariable(envVarName);
+
+            if (!string.IsNullOrEmpty(existing))
+            {
+                return $"{existing}{separator}{envVarValue}";
+            }
+            else
+            {
+                return envVarValue;
+            }
         }
 
         private void OnOutput(object sender, DataReceivedEventArgs eventArgs)
