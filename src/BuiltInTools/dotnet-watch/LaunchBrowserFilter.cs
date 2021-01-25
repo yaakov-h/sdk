@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.Watcher.Tools
 
                         const string dotnetStartHooksName = "DOTNET_STARTUP_HOOKS";
                         var pathToMiddleware = Path.Combine(AppContext.BaseDirectory, "middleware", "Microsoft.AspNetCore.Watch.BrowserRefresh.dll");
-                        context.ProcessSpec.EnvironmentVariables[dotnetStartHooksName] = AddOrAppend(dotnetStartHooksName, pathToMiddleware, RuntimeInformation.IsOsPlatform(OSPlatform.Windows) ? ';' : ':');
+                        context.ProcessSpec.EnvironmentVariables[dotnetStartHooksName] = AddOrAppend(dotnetStartHooksName, pathToMiddleware, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':');
 
                         const string hostingStartupAssembliesName = "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES";
                         context.ProcessSpec.EnvironmentVariables[hostingStartupAssembliesName] = AddOrAppend(hostingStartupAssembliesName, "Microsoft.AspNetCore.Watch.BrowserRefresh", ';');
@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Watcher.Tools
             return _refreshServer.SendMessage(message, cancellationToken);
         }
 
-        private string AddOrAppend(string envVarName, string envVarValue. char separator)
+        private string AddOrAppend(string envVarName, string envVarValue, char separator)
         {
             var existing = Environment.GetEnvironmentVariable(envVarName);
 
