@@ -66,48 +66,28 @@ Copyright (c) .NET Foundation. All rights reserved.
         <_TargetingNETCoreApp30OrLater>true</_TargetingNETCoreApp30OrLater>
         <_UseRazorSourceGenerator>false</_UseRazorSourceGenerator>
         <RazorLangVersion Condition="'$(RazorLangVersion)' == '' ">3.0</RazorLangVersion>
+        <_Targeting30OrNewerRazorLangVersion>true</_Targeting30OrNewerRazorLangVersion>
       </PropertyGroup>
     </When>
   </Choose>
 
-  
+  <!-- ====== Properties and targets shared regardless of TFM or Razor langauge version ===== -->
+  <!-- Keep this in sync with RazorLangVersion.cs if we introduce new text based values. -->
   <PropertyGroup>
-    <!--
-      In 3.0, we expect RazorLangVersion to either be specified in the template or inferred via TFM. In 2.x, RazorLangVersion is
-      specified via the Razor.Design package. We'll default to a version of 2.1, the earliest version that the SDK supports.
-      A 2.1 version should result in a build warning if the project contains Components.
-    -->
-    <RazorLangVersion Condition="'$(RazorLangVersion)' == ''">2.1</RazorLangVersion>
-
-    <!-- Keep this in sync with RazorLangVersion.cs if we introduce new text based values. -->
     <_Targeting30OrNewerRazorLangVersion Condition="
-        '$(RazorLangVersion)' == 'Latest' OR
-        '$(RazorLangVersion)' == 'Experimental' OR
-        ('$(RazorLangVersion)' != '' AND '$(RazorLangVersion)' >= '3.0')">true</_Targeting30OrNewerRazorLangVersion>
-
-    <!-- Controls whether or not the static web assets feature is enabled. By default is enabled for netcoreapp3.0
-         applications and RazorLangVersion 3 or above. -->
-    <StaticWebAssetsEnabled Condition="'$(StaticWebAssetsEnabled)' == ''">$(_Targeting30OrNewerRazorLangVersion)</StaticWebAssetsEnabled>
-
-    <!-- Controls whether or not the scoped css feature is enabled. By default is enabled for net6.0 applications and RazorLangVersion 5 or above -->
-    <ScopedCssEnabled Condition="'$(ScopedCssEnabled)' == '' and '$(StaticWebAssetsEnabled)' == 'true'">$(_Targeting30OrNewerRazorLangVersion)</ScopedCssEnabled>
+      '$(RazorLangVersion)' == 'Latest' OR
+      '$(RazorLangVersion)' == 'Experimental' OR
+      ('$(RazorLangVersion)' != '' AND '$(RazorLangVersion)' >= '3.0')">true</_Targeting30OrNewerRazorLangVersion>
   </PropertyGroup>
-
-
-  <PropertyGroup>
-    <!--
-      The property IsRazorCompilerReferenced is defined by the 2.x Razor.Design package. We can use this as a best guess to determine if a project is targeting 2.x or earlier.
-      This is useful to provide 3.0 or newer specific build warnings. However, since it's not very reliable, we should not use this to make build-altering decisions.
-    -->
-    <_IsTargetingRazor2X Condition="'$(IsRazorCompilerReferenced)'=='true'">true</_IsTargetingRazor2X>
-  </PropertyGroup>
-
   <!--
     Razor defines two primary targets:
       'RazorGenerate' - which updates generated code
       'RazorCompile' - compiles an assembly from generated code
 
     Use these properties and targets to attach behavior to the corresponding phase.
+
+    These properties define target dependencies that are shared in scenarios where we
+    compile via source generators (net6.0) and above and via `rzc generate`.
   -->
   <PropertyGroup>
     <PrepareForRazorGenerateDependsOn>
@@ -116,13 +96,6 @@ Copyright (c) .NET Foundation. All rights reserved.
       AssignRazorGenerateTargetPaths;
       _ResolveGeneratedRazorCompileInputs;
       _CheckForIncorrectMvcConfiguration;
-    </PrepareForRazorGenerateDependsOn>
-
-    <PrepareForRazorGenerateDependsOn Condition="'$(_UseRazorSourceGenerator)' != 'true'">
-      $(PrepareForRazorGenerateDependsOn);
-      ResolveAssemblyReferenceRazorGenerateInputs;
-      _CheckForMissingRazorCompiler;
-      ResolveTagHelperRazorGenerateInputs
     </PrepareForRazorGenerateDependsOn>
 
     <PrepareForRazorComponentGenerateDependsOn>
@@ -134,12 +107,6 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <RazorGenerateDependsOn>
       PrepareForRazorGenerate;
-    </RazorGenerateDependsOn>
-
-    <RazorGenerateDependsOn Condition="'$(_UseRazorSourceGenerator)' != 'true'">
-      $(RazorGenerateDependsOn);
-      _CheckForMissingRazorCompiler;
-      RazorCoreGenerate
     </RazorGenerateDependsOn>
 
     <RazorComponentGenerateDependsOn>
@@ -171,16 +138,6 @@ Copyright (c) .NET Foundation. All rights reserved.
       _RazorAddDebugSymbolsProjectOutputGroupOutput
     </DebugSymbolsProjectOutputGroupDependsOn>
 
-    <CoreCompileDependsOn Condition="'$(_UseRazorSourceGenerator)' != 'true' AND '$(DesignTimeBuild)'!='true'">
-      RazorComponentGenerate;
-      $(CoreCompileDependsOn)
-    </CoreCompileDependsOn>
-
-    <CoreCompileDependsOn Condition="'$(_UseRazorSourceGenerator)' != 'true' AND '$(DesignTimeBuild)'=='true'">
-      RazorGenerateComponentDeclarationDesignTime;
-      $(CoreCompileDependsOn)
-    </CoreCompileDependsOn>
-
     <PrepareForBuildDependsOn>
       $(PrepareForBuildDependsOn);
       ResolveRazorGenerateInputs
@@ -200,7 +157,6 @@ Copyright (c) .NET Foundation. All rights reserved.
       _RazorGetCopyToOutputDirectoryItems;
       $(GetCopyToOutputDirectoryItemsDependsOn)
     </GetCopyToOutputDirectoryItemsDependsOn>
-
   </PropertyGroup>
 
   <!--
@@ -221,7 +177,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <RazorCompileOnPublish Condition="'$(RazorCompileOnPublish)'==''">true</RazorCompileOnPublish>
   </PropertyGroup>
 
-  <!--
+    <!--
     Properties that configure Razor SDK, but need to be defined in targets due to evaluation order.
   -->
   <PropertyGroup>
@@ -242,6 +198,19 @@ Copyright (c) .NET Foundation. All rights reserved.
     <RazorTargetName Condition="'$(RazorTargetName)'==''">$(TargetName)$(RazorTargetNameSuffix)</RazorTargetName>
 
     <!--
+      In 3.0, we expect RazorLangVersion to either be specified in the template or inferred via TFM. In 2.x, RazorLangVersion is
+      specified via the Razor.Design package. We'll default to a version of 2.1, the earliest version that the SDK supports.
+      A 2.1 version should result in a build warning if the project contains Components.
+    -->
+    <RazorLangVersion Condition="'$(RazorLangVersion)' == '' ">2.1</RazorLangVersion>
+
+    <!--
+      The property IsRazorCompilerReferenced is defined by the 2.x Razor.Design package. We can use this as a best guess to determine if a project is targeting 2.x or earlier.
+      This is useful to provide 3.0 or newer specific build warnings. However, since it's not very reliable, we should not use this to make build-altering decisions.
+    -->
+    <_IsTargetingRazor2X Condition="'$(IsRazorCompilerReferenced)'=='true'">true</_IsTargetingRazor2X>
+
+    <!--
       The compatibility zone - these properties were provided by the MVC Precompilation tool and they
       map to supported settings in Razor SDK.
 
@@ -257,12 +226,6 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <!-- Use PreserveCompilationReferences to determine the behavior of CopyRefAssembliesToPublishDirectory if not explicitly specified by the project. -->
     <CopyRefAssembliesToPublishDirectory Condition="'$(CopyRefAssembliesToPublishDirectory)'==''">$(PreserveCompilationReferences)</CopyRefAssembliesToPublishDirectory>
-
-    <!-- For 2.x projects desktop and .NET Core projects, if they're opting in to runtime compilation (indicated by PreserveCompilationContext=true), set PreserveCompilationReferences = true -->
-    <PreserveCompilationReferences Condition=" '$(PreserveCompilationContext)' == 'true' AND
-      ('$(TargetFrameworkIdentifier)' == '.NETFramework' OR
-       ('$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND
-        '$(_TargetingNETCoreApp30OrLater)' != 'true')) ">true</PreserveCompilationReferences>
 
     <!--
       We can't set the actual default value here due to evaluation order (depends on $(OutDir)).
@@ -297,43 +260,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <_RazorDebugSymbolsProduced Condition="'$(DebugType)'=='embedded'">false</_RazorDebugSymbolsProduced>
   </PropertyGroup>
 
-  <!--
-    Resolve the toolset to use. This specifically applies to compilation with 2.x projects where compilation could be performed either using
-    the PrecompilationTool (Microsoft.AspNetCore.Mvc.Razor.ViewCompilation) or the RazorSDK and we have to infer the tool that is to be used.
-    In 3.0 or later, there is only the RazorSdk.
-   -->
-  <PropertyGroup Condition="'$(_Targeting30OrNewerRazorLangVersion)' == 'true'">
-    <ResolvedRazorCompileToolset>RazorSdk</ResolvedRazorCompileToolset>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(ResolvedRazorCompileToolset)' == ''">
-    <!-- Default value for the property 'MvcRazorCompileOnPublish' is empty. If it has been explicitly enabled, continue using precompilation. -->
-    <ResolvedRazorCompileToolset Condition="'$(MvcRazorCompileOnPublish)' == 'true'">PrecompilationTool</ResolvedRazorCompileToolset>
-
-    <!-- The default value for 'RazorCompileToolset' was not modified. In this case, infer the toolset to use as RazorSdk. -->
-    <ResolvedRazorCompileToolset Condition="'$(MvcRazorCompileOnPublish)' == '' AND '$(RazorCompileToolset)' == 'Implicit'">RazorSdk</ResolvedRazorCompileToolset>
-
-    <ResolvedRazorCompileToolset Condition="'$(MvcRazorCompileOnPublish)' == '' AND '$(RazorCompileToolset)' == 'PrecompilationTool'">$(RazorCompileToolset)</ResolvedRazorCompileToolset>
-    <ResolvedRazorCompileToolset Condition="'$(MvcRazorCompileOnPublish)' == '' AND '$(RazorCompileToolset)' == 'RazorSdk'">$(RazorCompileToolset)</ResolvedRazorCompileToolset>
-
-    <!-- If RazorSdk is not referenced, fall-back to Precompilation tool when referenced by a 2.2 or earlier targeting project. -->
-    <ResolvedRazorCompileToolset Condition="'$(ResolvedRazorCompileToolset)' == 'RazorSdk' And '$(IsRazorCompilerReferenced)' != 'true'">PrecompilationTool</ResolvedRazorCompileToolset>
-
-    <!-- Previous versions of the precompilation tool still depends on the msbuild property 'MvcRazorCompileOnPublish'. Hence, setting it to the old default value -->
-    <MvcRazorCompileOnPublish Condition="'$(MvcRazorCompileOnPublish)' == ''">true</MvcRazorCompileOnPublish>
-  </PropertyGroup>
-
-  <!-- Back-compat for PrecompilationTool -->
-  <PropertyGroup>
     <!--
-      For 2.x desktop targeting projects using MvcPrecompilation, ref assemblies are required to compile the PrecompiledViews.dll,
-      but are removed by the tool once done. Set PreserveCompilationReferences = true, ignoring any value configured in the project,
-      if the project is using the precompilation tool.
-    -->
-    <PreserveCompilationReferences Condition="'$(ResolvedRazorCompileToolset)'=='PrecompilationTool'">true</PreserveCompilationReferences>
-  </PropertyGroup>
-
-  <!--
     Properties that configure Razor SDK, but need to be defined in targets due to evaluation order.
   -->
   <ItemGroup>
@@ -363,6 +290,86 @@ Copyright (c) .NET Foundation. All rights reserved.
     <UpToDateCheckBuilt Include="@(RazorIntermediateAssembly)"
       Condition="'$(RazorCompileOnBuild)'=='true' AND '@(Content->WithMetadataValue('Extension', '.cshtml'))' != ''" Set="RazorViews" />
   </ItemGroup>
+
+  <!-- ====== Properties and targets relating to builds on apps targeting >= net6.0 ===== -->
+  <!-- ==== Enabled features include source generator support. === -->
+  <PropertyGroup Condition="'$(_UseRazorSourceGenerator)' != 'true'">
+    <!-- When compiling with source generators, we need to invoke the `rzc generate` pipeline
+    so we update our dependencies to include its requirements here. -->
+    <PrepareForRazorGenerateDependsOn>
+      $(PrepareForRazorGenerateDependsOn);
+      ResolveAssemblyReferenceRazorGenerateInputs;
+      _CheckForMissingRazorCompiler;
+      ResolveTagHelperRazorGenerateInputs
+    </PrepareForRazorGenerateDependsOn>
+    <RazorGenerateDependsOn>
+      $(RazorGenerateDependsOn);
+      _CheckForMissingRazorCompiler;
+      RazorCoreGenerate
+    </RazorGenerateDependsOn>
+
+    <CoreCompileDependsOn Condition="'$(DesignTimeBuild)'!='true'">
+      RazorComponentGenerate;
+      $(CoreCompileDependsOn)
+    </CoreCompileDependsOn>
+    <CoreCompileDependsOn Condition="'$(DesignTimeBuild)'=='true'">
+      RazorGenerateComponentDeclarationDesignTime;
+      $(CoreCompileDependsOn)
+    </CoreCompileDependsOn>
+  </PropertyGroup>
+
+  <!-- ====== Properties and targets relating to builds on apps targeting >= netcoreapp3.0 ===== -->
+  <!-- ==== Enabled features include scoped CSS support and SWA support. ==== -->
+  <PropertyGroup>
+    <!-- Controls whether or not the static web assets feature is enabled. By default is enabled for netcoreapp3.0
+         applications and RazorLangVersion 3 or above. -->
+    <StaticWebAssetsEnabled Condition="'$(StaticWebAssetsEnabled)' == ''">$(_Targeting30OrNewerRazorLangVersion)</StaticWebAssetsEnabled>
+
+    <!-- Controls whether or not the scoped css feature is enabled. By default is enabled for net6.0 applications and RazorLangVersion 5 or above -->
+    <ScopedCssEnabled Condition="'$(ScopedCssEnabled)' == '' and '$(StaticWebAssetsEnabled)' == 'true'">$(_Targeting30OrNewerRazorLangVersion)</ScopedCssEnabled>
+  </PropertyGroup>
+
+  <!-- ====== Properties and targets relating to builds on apps targeting < netcoreapp3.0 ===== -->
+  <!--
+  Resolve the toolset to use. This specifically applies to compilation with 2.x projects where compilation could be performed either using
+  the PrecompilationTool (Microsoft.AspNetCore.Mvc.Razor.ViewCompilation) or the RazorSDK and we have to infer the tool that is to be used.
+  In 3.0 or later, there is only the RazorSdk.
+  -->
+  <PropertyGroup Condition="'$(_Targeting30OrNewerRazorLangVersion)' == 'true'">
+    <ResolvedRazorCompileToolset>RazorSdk</ResolvedRazorCompileToolset>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ResolvedRazorCompileToolset)' == ''">
+    <!-- Default value for the property 'MvcRazorCompileOnPublish' is empty. If it has been explicitly enabled, continue using precompilation. -->
+    <ResolvedRazorCompileToolset Condition="'$(MvcRazorCompileOnPublish)' == 'true'">PrecompilationTool</ResolvedRazorCompileToolset>
+
+    <!-- The default value for 'RazorCompileToolset' was not modified. In this case, infer the toolset to use as RazorSdk. -->
+    <ResolvedRazorCompileToolset Condition="'$(MvcRazorCompileOnPublish)' == '' AND '$(RazorCompileToolset)' == 'Implicit'">RazorSdk</ResolvedRazorCompileToolset>
+
+    <ResolvedRazorCompileToolset Condition="'$(MvcRazorCompileOnPublish)' == '' AND '$(RazorCompileToolset)' == 'PrecompilationTool'">$(RazorCompileToolset)</ResolvedRazorCompileToolset>
+    <ResolvedRazorCompileToolset Condition="'$(MvcRazorCompileOnPublish)' == '' AND '$(RazorCompileToolset)' == 'RazorSdk'">$(RazorCompileToolset)</ResolvedRazorCompileToolset>
+
+    <!-- If RazorSdk is not referenced, fall-back to Precompilation tool when referenced by a 2.2 or earlier targeting project. -->
+    <ResolvedRazorCompileToolset Condition="'$(ResolvedRazorCompileToolset)' == 'RazorSdk' And '$(IsRazorCompilerReferenced)' != 'true'">PrecompilationTool</ResolvedRazorCompileToolset>
+
+    <!-- Previous versions of the precompilation tool still depends on the msbuild property 'MvcRazorCompileOnPublish'. Hence, setting it to the old default value -->
+    <MvcRazorCompileOnPublish Condition="'$(MvcRazorCompileOnPublish)' == ''">true</MvcRazorCompileOnPublish>
+  </PropertyGroup>
+
+  <!-- Back-compat for PrecompilationTool -->
+  <PropertyGroup>
+    <!--
+      For 2.x desktop targeting projects using MvcPrecompilation, ref assemblies are required to compile the PrecompiledViews.dll,
+      but are removed by the tool once done. Set PreserveCompilationReferences = true, ignoring any value configured in the project,
+      if the project is using the precompilation tool.
+    -->
+    <PreserveCompilationReferences Condition="'$(ResolvedRazorCompileToolset)'=='PrecompilationTool'">true</PreserveCompilationReferences>
+    <!-- For 2.x projects desktop and .NET Core projects, if they're opting in to runtime compilation (indicated by PreserveCompilationContext=true), set PreserveCompilationReferences = true -->
+    <PreserveCompilationReferences Condition=" '$(PreserveCompilationContext)' == 'true' AND
+      ('$(TargetFrameworkIdentifier)' == '.NETFramework' OR
+       ('$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND
+        '$(_TargetingNETCoreApp30OrLater)' != 'true')) ">true</PreserveCompilationReferences>
+  </PropertyGroup>
 
   <!--
     These are the targets that generate code using Razor, separated from the main file for ease of maintenance.
