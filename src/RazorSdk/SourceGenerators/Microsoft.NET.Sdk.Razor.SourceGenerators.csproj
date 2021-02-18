@@ -7,19 +7,14 @@
     <!-- This is not a package, it is part of Razor SDK. -->
     <IsPackable>false</IsPackable>
     <IsShipping>false</IsShipping>
+    <NoWarn>NU1605;CS1705</NoWarn>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Tool\TagHelperDescriptorJsonConverter.cs" LinkBase="Shared" />
-    <Compile Include="..\Tool\RazorDiagnosticJsonConverter.cs" LinkBase="Shared" />
-    <Compile Include="..\Tool\JsonReaderExtensions.cs" LinkBase="Shared" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" GeneratePathProperty="true"/>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" GeneratePathProperty="true"/>
-    <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="$(MicrosoftAspNetCoreRazorLanguageVersion)" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Razor" Version="$(MicrosoftCodeAnalysisRazorVersion)" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="6.0.0-dev" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Razor" Version="6.0.0-dev" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.Extensions" Version="$(MicrosoftAspNetCoreMvcRazorExtensionsPackageVersion)" GeneratePathProperty="true" />
   </ItemGroup>
 
