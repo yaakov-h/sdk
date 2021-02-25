@@ -4,7 +4,10 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Watcher.Internal;
@@ -35,6 +38,7 @@ namespace Microsoft.DotNet.Watcher
                 new MSBuildEvaluationFilter(fileSetFactory),
                 new NoRestoreFilter(),
                 new LaunchBrowserFilter(dotNetWatchOptions),
+                new SocketHandoffFilter()
             };
         }
 
@@ -59,6 +63,9 @@ namespace Microsoft.DotNet.Watcher
             {
                 _reporter.Verbose("MSBuild incremental optimizations suppressed.");
             }
+
+            context.HttpListenSocket = SetupSocket(9999);
+            context.HttpsListenSocket = SetupSocket(10000);
 
             while (true)
             {
@@ -159,6 +166,17 @@ namespace Microsoft.DotNet.Watcher
                     }
                 }
             }
+        }
+
+        private static Socket SetupSocket(int port)
+        {
+            var ipEndPoint = new IPEndPoint(IPAddress.Loopback, port);
+            var listenSocket = new Socket(ipEndPoint.AddressFamily,
+                                    SocketType.Stream,
+                                    ProtocolType.Tcp);
+            listenSocket.Bind(ipEndPoint);
+            listenSocket.Listen();
+            return listenSocket;
         }
 
         public async ValueTask DisposeAsync()

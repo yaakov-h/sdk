@@ -7,12 +7,14 @@
     <RootNamespace>Microsoft.DotNet.Watcher.Tools</RootNamespace>
     <StrongNameKeyId>MicrosoftAspNetCore</StrongNameKeyId>
     <UseAppHost>false</UseAppHost>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RuntimeIdentifier />
   </PropertyGroup>
 
   <ItemGroup>
     <EmbeddedResource Update="**\*.resx" GenerateSource="true" />
     <Content Include="DotNetWatch.targets" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\Common\LibC.cs" Link="LibC.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +25,13 @@
 
     <ProjectReference
       Include="..\BrowserRefresh\Microsoft.AspNetCore.Watch.BrowserRefresh.csproj"
+      PrivateAssets="All"
+      ReferenceOutputAssembly="false"
+      SkipGetTargetFrameworkProperties="true"
+      UndefineProperties="TargetFramework;TargetFrameworks" />
+
+    <ProjectReference
+      Include="..\ReloadIntegration\Microsoft.AspNetCore.Watch.ReloadIntegration.csproj"
       PrivateAssets="All"
       ReferenceOutputAssembly="false"
       SkipGetTargetFrameworkProperties="true"

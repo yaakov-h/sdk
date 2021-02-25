@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Net.Sockets;
 using Microsoft.Extensions.Tools.Internal;
 
 namespace Microsoft.DotNet.Watcher.Tools
@@ -22,5 +23,8 @@ namespace Microsoft.DotNet.Watcher.Tools
         public bool SuppressMSBuildIncrementalism { get; set; }
 
         public BrowserRefreshServer BrowserRefreshServer { get; set; }
+
+        public Socket HttpListenSocket { get; set; }
+        public Socket HttpsListenSocket { get; set; }
     }
 }
