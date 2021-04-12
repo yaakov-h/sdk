@@ -2,10 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 //
 
+using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Xml.Linq;
 using FluentAssertions;
 using Microsoft.DotNet.Cli.Utils;
 using Microsoft.NET.TestFramework;
@@ -212,6 +211,30 @@ namespace Microsoft.NET.Build.Tests
             }
 
             RunTest(referencedExeShouldRun: true);
+        }
+
+        [Fact]
+        public void CanBuildMainProjectTwiceWithNoDependenciesNoIncrementalOptions()
+        {
+            CreateProjects();
+
+            MainProject.OutputPath = @"..\";
+            ReferencedProject.OutputPath = @"..\";
+
+            var testProjectInstance = _testAssetsManager.CreateTestProject(MainProject, callingMethod: nameof(CanBuildMainProjectTwiceWithNoDependenciesNoIncrementalOptions), identifier: MainSelfContained.ToString() + "_" + ReferencedSelfContained.ToString());
+
+            for (var i = 0; i < 2; i++)
+            {
+                var buildReferencedProjectCommand = new DotnetBuildCommand(Log, Path.Combine(ReferencedProject.Name, ReferencedProject.Name + ".csproj")) { WorkingDirectory = testProjectInstance.TestRoot };
+                buildReferencedProjectCommand.Execute("--no-dependencies", "--no-incremental")
+                    .Should()
+                    .Pass();
+
+                var buildMainProjectCommand = new DotnetBuildCommand(Log, Path.Combine(MainProject.Name, MainProject.Name + ".csproj")) { WorkingDirectory = testProjectInstance.TestRoot };
+                buildMainProjectCommand.Execute("--no-dependencies", "--no-incremental")
+                    .Should()
+                    .Pass();
+            }
         }
     }
 }

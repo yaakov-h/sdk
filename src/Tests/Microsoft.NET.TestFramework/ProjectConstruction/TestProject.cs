@@ -41,6 +41,8 @@ namespace Microsoft.NET.TestFramework.ProjectConstruction
 
         public string TargetFrameworkProfile { get; set; }
 
+        public string OutputPath { get; set; }
+
         public List<TestProject> ReferencedProjects { get; } = new List<TestProject>();
 
         public List<string> References { get; } = new List<string>();
@@ -244,6 +246,22 @@ namespace Microsoft.NET.TestFramework.ProjectConstruction
             else if (this.IsWinExe)
             {
                 propertyGroup.Element(ns + "OutputType").SetValue("WinExe");
+            }
+
+            if (!string.IsNullOrEmpty(OutputPath))
+            {
+                var outputPathElement = projectXml.Root.Elements(ns + "PropertyGroup")
+                    .Select(propertyGroup => propertyGroup.Element(ns + "OutputPath"))
+                    .FirstOrDefault(outputPathElement => outputPathElement != null);
+
+                if (outputPathElement == null)
+                {
+                    outputPathElement = new XElement(ns + "OutputPath");
+                    propertyGroup.Add(outputPathElement);
+
+                }
+
+                outputPathElement.SetValue(OutputPath);
             }
 
             if (this.ReferencedProjects.Any())
