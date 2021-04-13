@@ -353,10 +353,12 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ItemGroup Condition="'$(GenerateDependencyFile)' == 'true'">
       <AllPublishItemsFullPathWithTargetPath Include="$(ProjectDepsFilePath)"
                                       TargetPath="$([System.IO.Path]::GetFileName($(ProjectDepsFilePath)))"
-                                      CopyToPublishDirectory="PreserveNewest" />
+                                      CopyToPublishDirectory="PreserveNewest"
+                                      Condition="'$(_UseBuildDependencyFile)' == 'true'"/>
       <AllPublishItemsFullPathWithTargetPath Include="$(PublishDepsFilePath)"
                                       TargetPath="$([System.IO.Path]::GetFileName($(PublishDepsFilePath)))"
-                                      CopyToPublishDirectory="PreserveNewest" />
+                                      CopyToPublishDirectory="PreserveNewest"
+                                      Condition="'$(PublishDepsFilePath)' != '' and '$(_UseBuildDependencyFile)' != 'true'"/>
     </ItemGroup>
 
     <ItemGroup Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true'">
