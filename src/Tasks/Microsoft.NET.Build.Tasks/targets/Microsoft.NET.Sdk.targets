@@ -371,13 +371,14 @@ Copyright (c) .NET Foundation. All rights reserved.
 
   </Target>
 
-  <Target Name="RemoveTransitiveItemsToCopyToOutputDirectoryThatAreSourcedFromOutputDirectoryInTheFirstPlace"
+  <Target Name="_SkipCopyingTransitiveItemsToCopyToOutputDirectoryThatAreSourcedFromOutputDirectoryInTheFirstPlace"
+          Returns="@(_CopyOutOfDateSourceItemsToOutputDirectory)"
           DependsOnTargets="_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences"
-          BeforeTargets="GetCopyToOutputDirectoryItems">
+          BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory">
 
-    <ItemGroup Condition="'@(_TransitiveItemsToCopyToOutputDirectory)' != ''">
-      <_TransitiveItemsToCopyToOutputDirectory Remove="@(_TransitiveItemsToCopyToOutputDirectory)"
-                                               Condition="'$([System.IO.Path]::GetDirectoryName(%(Identity)))' == '$([System.IO.Path]::GetDirectoryName($(TargetPath)))'" />
+    <ItemGroup Condition="'@(_SourceItemsToCopyToOutputDirectory)' != ''">
+      <_SourceItemsToCopyToOutputDirectory Remove="@(_SourceItemsToCopyToOutputDirectory)"
+                                           Condition="'$([System.IO.Path]::GetDirectoryName(%(Identity)))' == '$([System.IO.Path]::GetDirectoryName($(TargetPath)))'" />
     </ItemGroup>
 
   </Target>
