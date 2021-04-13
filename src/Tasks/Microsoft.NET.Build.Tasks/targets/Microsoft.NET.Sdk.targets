@@ -323,7 +323,7 @@ Copyright (c) .NET Foundation. All rights reserved.
                                      FinalOutputPath="$(ProjectRuntimeConfigFilePath)" />
     </ItemGroup>
   </Target>
-  
+
   <Target Name="AddDepsJsonAndRuntimeConfigToCopyItemsForReferencingProjects"
           BeforeTargets="GetCopyToOutputDirectoryItems;_GetCopyToOutputDirectoryItemsFromThisProject"
           Condition="'$(HasRuntimeOutput)' == 'true'">
